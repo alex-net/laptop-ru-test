@@ -20,31 +20,22 @@ class Complex {
 	{
 		if(!empty($var[0]) && is_string($var[0]) && preg_match('#(-?\d*\.?\d*)([+-]?\d*\.?\d*i)?#i',$var[0],$els)){
 			array_shift($els);
-			if (count($els)==2 && ($els[0]=='-' || !in_array($els[1][0],['+','-']) ))
-				$els=[implode('',$els)];
-			if (count($els)==1 )
-				if (strpos($els[0], 'i')!==false)
-					array_unshift($els, '0');
-				else
-					$els[]='0';
-			if (strpos($els[1], 'i')!==false){
-				$replacer='1';
-				if(preg_match('#\d#', $els[1]))
-					$replacer='';
-				$els[1]=str_replace('i', $replacer, $els[1]);
-			}
-			
-			//print_r($els);
-			$var=array_map('intval', $els);
-			
+			// мнимая часть может располздтись на два элемента если  не задана реальная составляющая ..
+			if (count($els)==2 && $els[1]=='i')
+				$els=[0,implode('',$els)];
+			// есть мнимая составляющая .. и там нет цифр = надо заменить i на единицу .. 
+			if (!empty($els[1]) && !preg_match('#\d#',$els[1]))
+				$els[1]=str_replace('i', '1', $els[1]);
+
+			$els=array_pad($els, 2, 0);
+			$var=array_map('floatval', $els);			
 		}
 
-
-		// переданы два числа .. 
-		if (count($var)==2){
-			$this->re=intval($var[0]);
-			$this->im=intval($var[1]);
-		}
+		$var=array_pad($var, 2, 0);
+		
+		$this->re=floatval($var[0]);
+		$this->im=floatval($var[1]);
+		
 
 	}
 	
@@ -56,12 +47,12 @@ class Complex {
 	{
 		$str='';
 		if ($this->re)
-			$str=sprintf('%g',$this->re);
+			$str=sprintf('%g',round($this->re,2));
 		if ($this->im){
 			$fmt='%gi';
 			if ($str)
 				$fmt='%+gi';
-			$str2=sprintf($fmt,$this->im);
+			$str2=sprintf($fmt,round($this->im,2));
 			if (abs($this->im)==1)
 				$str2=str_replace('1','', $str2);
 			$str.=$str2;
@@ -75,7 +66,7 @@ class Complex {
 	 * вернуть действительную часть
 	 * @return int Действительная составляющая комплексного числа
 	 */
-	public function getRe():int
+	public function getRe():float 
 	{
 		return $this->re;
 	}
@@ -84,7 +75,7 @@ class Complex {
 	 * вернуть мнимую часть .. 
 	 * @return int Мнимая составляющая комплексного числа 
 	 */
-	public function getIm():int
+	public function getIm():float
 	{
 		return $this->im;
 	}
@@ -101,15 +92,10 @@ class Complex {
 			$this->im+=$c->getIm();
 			return $this;
 		}
-		switch(gettype($c)){
-			case 'integer':
-				$this->re+=$c;
-			break;
-			case 'string':
-				$tmp=new static($c);
-				if ($tmp)
-					$this->add($tmp);
-		}
+		$tmp=new static($c);
+		if ($tmp)
+			$this->add($tmp);
+		
 		return $this;
 	}
 
@@ -125,15 +111,9 @@ class Complex {
 			$this->im-=$c->getIm();
 			return $this;
 		}
-		switch(gettype($c)){
-			case 'integer':
-				$this->re-=$c;
-			break;
-			case 'string':
-				$tmp=new static($c);
-				if ($tmp)
-					$this->sub($tmp);
-		}
+
+		$tmp=new static($c);
+		$this->sub($tmp);
 		return $this;
 	}
 
@@ -152,16 +132,8 @@ class Complex {
 			$this->im=$oldRe*$im+$this->im*$re;
 			return $this;
 		}
-		switch(gettype($c)){
-			case 'integer':
-				$this->re*=$c;
-				$this->im*=$c;
-			break;
-			case 'string':
-				$tmp=new static($c);
-				if ($tmp)
-					$this->mul($tmp);
-		}
+		$tmp=new static($c);
+		$this->mul($tmp);
 
 		return $this;
 	}
@@ -174,28 +146,25 @@ class Complex {
 	public function div($c)
 	{
 		if ($c instanceof Complex){
-			$znam=new Complex($c->getRe(),-$c->getIm());
-			$c->mul($znam);
-			$this->mul($znam);
-			$this->div($c->getRe());
+			$re=$c->getRe();
+			$im=$c->getIm();
+			if($im){
+				$znam=new Complex($re,-$im);
+				$c->mul($znam);
+				$this->mul($znam);
+				$this->div($re**2-$im**2);
+			}
+			else{
+				$this->re/=$re;
+				$this->im/=$re;
+			}
+
 			return $this;
 		}
-		print_r(gettype($c));
-		switch(gettype($c)){
-			case 'integer':
-				if (empty($c)){
-					throw new \Exception("Dividion by zerro", 1);
-					
-					break;
-				}
-				$this->re/=$c;
-				$this->im/=$c;
-			break;
-			case 'string':
-				$tmp=new static($c);
-				if ($tmp)
-					$this->div($tmp);
-		}
+
+		$tmp=new static($c);		
+		$this->div($tmp);
+		return  $this;
 
 	}
 
