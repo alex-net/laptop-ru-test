@@ -1,5 +1,7 @@
 <?php 
-
+/**
+ * класс для работы с комплексными числами . 
+ */
 class Complex {
 
 	/**
@@ -46,7 +48,10 @@ class Complex {
 
 	}
 	
-
+	/**
+	 * Печать числа .
+	 * @return string [description]
+	 */
 	public function __toString()
 	{
 		$str='';
@@ -68,7 +73,7 @@ class Complex {
 
 	/**
 	 * вернуть действительную часть
-	 * @return int [description]
+	 * @return int Действительная составляющая комплексного числа
 	 */
 	public function getRe():int
 	{
@@ -77,7 +82,7 @@ class Complex {
 
 	/**
 	 * вернуть мнимую часть .. 
-	 * @return int [description]
+	 * @return int Мнимая составляющая комплексного числа 
 	 */
 	public function getIm():int
 	{
@@ -85,11 +90,9 @@ class Complex {
 	}
 
 
-
-
 	/**
 	 * сложение ...
-	 * @param Complex $c [description]
+	 * @param Complex|string|int $c Второе слогаемое
 	 */
 	public function add($c)
 	{
@@ -113,7 +116,7 @@ class Complex {
 
 	/**
 	 * вычетание
-	 * @param Complex $c [description]
+	 * @param Complex $c вычитаемое
 	 */
 	public function sub($c)
 	{
@@ -136,6 +139,7 @@ class Complex {
 
 	/**
 	 * умножение 
+	 * @param string|int|Complex  $c Второй множитель
 	 * @return [type] [description]
 	 */
 	public function mul($c)
@@ -162,6 +166,11 @@ class Complex {
 		return $this;
 	}
 
+	/**
+	 * деление  
+	 * @param  Complex|string|int $c делитель
+	 * @return Complex
+	 */
 	public function div($c)
 	{
 		if ($c instanceof Complex){
